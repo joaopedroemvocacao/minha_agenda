@@ -283,6 +283,7 @@
             color: #adb5bd;
         }
 
+        /* MODAL DE EDIÇÃO */
         .modal {
             display: none;
             position: fixed;
@@ -302,6 +303,77 @@
             border-radius: 20px;
             max-width: 500px;
             width: 90%;
+        }
+
+        /* MODAL DE CONFIRMAÇÃO (POPUP DE CANCELAR) */
+        .confirm-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 10001;
+        }
+
+        .confirm-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .confirm-content h3 {
+            color: #dc3545;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+
+        .confirm-content p {
+            color: #555;
+            margin-bottom: 25px;
+            font-size: 16px;
+        }
+
+        .confirm-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn-confirm-yes {
+            background: #dc3545;
+            color: white;
+            padding: 10px 25px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .btn-confirm-yes:hover {
+            background: #c82333;
+        }
+
+        .btn-confirm-no {
+            background: #6c757d;
+            color: white;
+            padding: 10px 25px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .btn-confirm-no:hover {
+            background: #5a6268;
         }
 
         /* POPUP DE NOTIFICAÇÃO (TOAST) */
@@ -491,6 +563,18 @@
         </div>
     </div>
 
+    <!-- MODAL DE CONFIRMAÇÃO (CANCELAR REUNIÃO) -->
+    <div id="confirmModal" class="confirm-modal">
+        <div class="confirm-content">
+            <h3>⚠️ Confirmar</h3>
+            <p>Tem certeza que deseja cancelar esta reunião?</p>
+            <div class="confirm-buttons">
+                <button class="btn-confirm-yes" id="confirmYes">Sim, cancelar</button>
+                <button class="btn-confirm-no" id="confirmNo">Não, voltar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- POPUP DE NOTIFICAÇÃO -->
     <div id="toastNotification" class="toast-notification">
         <span class="toast-close" onclick="fecharToast()">&times;</span>
@@ -499,6 +583,9 @@
     </div>
 
     <script>
+        // Variável para guardar o ID da reunião a ser cancelada
+        let cancelarId = null;
+
         // TELA DE CARREGAMENTO
         window.addEventListener('load', function() {
             setTimeout(function() {
@@ -534,6 +621,36 @@
             const toast = document.getElementById('toastNotification');
             toast.classList.remove('show');
         }
+
+        // FUNÇÃO DO POPUP DE CONFIRMAÇÃO
+        function mostrarConfirmacao(id) {
+            cancelarId = id;
+            document.getElementById('confirmModal').style.display = 'flex';
+        }
+
+        function fecharConfirmacao() {
+            document.getElementById('confirmModal').style.display = 'none';
+            cancelarId = null;
+        }
+
+        // Eventos dos botões do modal de confirmação
+        document.getElementById('confirmYes').onclick = async function() {
+            if(cancelarId) {
+                const resposta = await fetch(`/cancelar/${cancelarId}`, { method: 'DELETE' });
+                const resultado = await resposta.json();
+                if(resultado.sucesso) {
+                    mostrarToast('info', '🗑️ Cancelado!', resultado.mensagem);
+                } else {
+                    mostrarToast('error', '❌ Erro!', resultado.mensagem);
+                }
+                fecharConfirmacao();
+                carregarLista();
+            }
+        };
+
+        document.getElementById('confirmNo').onclick = function() {
+            fecharConfirmacao();
+        };
 
         // TROCAR ABA
         function switchTab(tab) {
@@ -609,7 +726,7 @@
                         </div>
                         <div>
                             <button class="btn-edit" onclick="abrirModalEditar(${r.id})">✏️ Editar</button>
-                            <button class="btn-delete" onclick="confirmarCancelar(${r.id})">🗑️ Cancelar</button>
+                            <button class="btn-delete" onclick="mostrarConfirmacao(${r.id})">🗑️ Cancelar</button>
                         </div>
                     </div>
                 `).join('');
@@ -664,20 +781,6 @@
             }
             fecharModal();
             carregarLista();
-        }
-
-        // CANCELAR REUNIÃO
-        async function confirmarCancelar(id) {
-            if(confirm('Tem certeza que deseja cancelar esta reunião?')) {
-                const resposta = await fetch(`/cancelar/${id}`, { method: 'DELETE' });
-                const resultado = await resposta.json();
-                if(resultado.sucesso) {
-                    mostrarToast('info', '🗑️ Cancelado!', resultado.mensagem);
-                } else {
-                    mostrarToast('error', '❌ Erro!', resultado.mensagem);
-                }
-                carregarLista();
-            }
         }
 
         function fecharModal() {
