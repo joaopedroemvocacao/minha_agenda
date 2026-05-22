@@ -414,6 +414,10 @@
                     <form id="agendaForm">
                         <div class="form-grid">
                             <div class="form-group">
+                                <label>📝 Nome da Reunião</label>
+                                <input type="text" id="nomeReuniao" placeholder="Ex: Reunião de vendas, Alinhamento, etc" required>
+                            </div>
+                            <div class="form-group">
                                 <label>👤 Nome do Cliente</label>
                                 <input type="text" id="nome" placeholder="Digite o nome completo" required>
                             </div>
@@ -456,26 +460,30 @@
             <h3>✏️ Editar Reunião</h3>
             <input type="hidden" id="editId">
             <div class="form-group">
-                <label>Nome</label>
+                <label>📝 Nome da Reunião</label>
+                <input type="text" id="editNomeReuniao" style="width:100%; padding:10px; margin-bottom:15px; border:2px solid #e9ecef; border-radius:8px;">
+            </div>
+            <div class="form-group">
+                <label>👤 Nome do Cliente</label>
                 <input type="text" id="editNome" style="width:100%; padding:10px; margin-bottom:15px; border:2px solid #e9ecef; border-radius:8px;">
             </div>
             <div class="form-group">
-                <label>Telefone</label>
+                <label>📞 Telefone</label>
                 <input type="text" id="editTelefone" style="width:100%; padding:10px; margin-bottom:15px; border:2px solid #e9ecef; border-radius:8px;">
             </div>
             <div class="form-group">
-                <label>Data</label>
+                <label>📅 Data</label>
                 <input type="date" id="editData" style="width:100%; padding:10px; margin-bottom:15px; border:2px solid #e9ecef; border-radius:8px;">
             </div>
             <div class="form-group">
-                <label>Horário</label>
+                <label>⏰ Horário</label>
                 <input type="time" id="editHorario" style="width:100%; padding:10px; margin-bottom:15px; border:2px solid #e9ecef; border-radius:8px;">
             </div>
             <div class="form-group">
-                <label>Local</label>
+                <label>📍 Local</label>
                 <select id="editLocal" style="width:100%; padding:10px; margin-bottom:15px; border:2px solid #e9ecef; border-radius:8px;">
-                    <option value="meet">Meet</option>
-                    <option value="Presencial">Presencial</option>
+                    <option value="meet">💻 Google Meet (Online)</option>
+                    <option value="Presencial">🏢 Presencial (Escritório)</option>
                 </select>
             </div>
             <button onclick="salvarEdicao()" class="btn-primary" style="margin-bottom:10px;">💾 Salvar Alterações</button>
@@ -548,6 +556,7 @@
             e.preventDefault();
             
             const dados = {
+                nomeReuniao: document.getElementById('nomeReuniao').value,
                 nome: document.getElementById('nome').value,
                 telefone: document.getElementById('telefone').value,
                 data: document.getElementById('data').value,
@@ -586,13 +595,14 @@
                 listaDiv.innerHTML = reunioes.map(r => `
                     <div class="reuniao-item">
                         <div class="reuniao-header">
-                            <span class="reuniao-nome">${r.nome}</span>
+                            <span class="reuniao-nome">📝 ${r.nomeReuniao || 'Sem título'}</span>
                             <span class="reuniao-id">ID: ${r.id}</span>
                         </div>
                         <div class="reuniao-detalhes">
+                            <span>👤 ${r.nome}</span>
+                            <span>📱 ${r.telefone}</span>
                             <span>📅 ${formatarData(r.data)}</span>
                             <span>⏰ ${r.horario}</span>
-                            <span>📱 ${r.telefone}</span>
                             <span class="${r.local === 'meet' ? 'badge-meet' : 'badge-presencial'}">
                                 ${r.local === 'meet' ? '💻 Meet' : '🏢 Presencial'}
                             </span>
@@ -619,6 +629,7 @@
             if(resultado.sucesso) {
                 const r = resultado.reuniao;
                 document.getElementById('editId').value = r.id;
+                document.getElementById('editNomeReuniao').value = r.nomeReuniao || '';
                 document.getElementById('editNome').value = r.nome;
                 document.getElementById('editTelefone').value = r.telefone;
                 document.getElementById('editData').value = r.data;
@@ -633,6 +644,7 @@
         async function salvarEdicao() {
             const id = document.getElementById('editId').value;
             const dados = {
+                nomeReuniao: document.getElementById('editNomeReuniao').value,
                 nome: document.getElementById('editNome').value,
                 telefone: document.getElementById('editTelefone').value,
                 data: document.getElementById('editData').value,
